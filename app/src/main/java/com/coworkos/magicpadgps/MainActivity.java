@@ -9,9 +9,10 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.net.ConnectivityManager;
+import android.net.LinkAddress;
+import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -26,7 +27,6 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.net.Inet4Address;
-import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -222,30 +222,28 @@ public class MainActivity extends Activity {
     private List<String> localIpAddresses() {
         try {
             ConnectivityManager connectivityManager = getSystemService(ConnectivityManager.class);
-            Network active = connectivityManager.getActiveNetwork();
-            if (active != null) {
-                NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(active);
-                if (capabilities != null && !capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                    return Collections.emptyList();
+            // Iterate only Wi-Fi networks so we never surface a cellular (10.x) address.
+            for (Network network : connectivityManager.getAllNetworks()) {
+                NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
+                if (capabilities == null || !capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                    continue;
                 }
-            }
-
-            WifiManager.MulticastLock lock = ((WifiManager) getApplicationContext()
-                    .getSystemService(WIFI_SERVICE))
-                    .createMulticastLock("magicpad-gps-ip-read");
-            lock.setReferenceCounted(false);
-            lock.acquire();
-            lock.release();
-
-            List<String> addresses = new ArrayList<>();
-            for (NetworkInterface networkInterface : Collections.list(NetworkInterface.getNetworkInterfaces())) {
-                for (java.net.InetAddress address : Collections.list(networkInterface.getInetAddresses())) {
-                    if (!address.isLoopbackAddress() && address instanceof Inet4Address) {
-                        addresses.add(address.getHostAddress());
+                LinkProperties linkProperties = connectivityManager.getLinkProperties(network);
+                if (linkProperties == null) {
+                    continue;
+                }
+                List<String> addresses = new ArrayList<>();
+                for (LinkAddress linkAddress : linkProperties.getLinkAddresses()) {
+                    java.net.InetAddress addr = linkAddress.getAddress();
+                    if (!addr.isLoopbackAddress() && addr instanceof Inet4Address) {
+                        addresses.add(addr.getHostAddress());
                     }
                 }
+                if (!addresses.isEmpty()) {
+                    return addresses;
+                }
             }
-            return addresses;
+            return Collections.emptyList();
         } catch (Exception ignored) {
             return Collections.emptyList();
         }
