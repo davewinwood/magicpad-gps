@@ -35,7 +35,7 @@ final class NotificationTools {
                 PendingIntent.FLAG_IMMUTABLE
         );
 
-        Intent stopIntent = new Intent(context, stopAction);
+        Intent stopIntent = new Intent(stopAction);
         stopIntent.setClass(context, StopReceiver.class);
         PendingIntent stopPendingIntent = PendingIntent.getBroadcast(
                 context,
