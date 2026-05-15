@@ -222,7 +222,7 @@ public class MainActivity extends Activity {
     private List<String> localIpAddresses() {
         try {
             ConnectivityManager connectivityManager = getSystemService(ConnectivityManager.class);
-            // Iterate only Wi-Fi networks so we never surface a cellular (10.x) address.
+            // Find the active Wi-Fi network specifically so we never show a cellular (10.x) IP.
             for (Network network : connectivityManager.getAllNetworks()) {
                 NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
                 if (capabilities == null || !capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
