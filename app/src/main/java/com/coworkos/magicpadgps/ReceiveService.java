@@ -92,32 +92,51 @@ public class ReceiveService extends Service {
 
     private void connect(String host) {
         ioExecutor.execute(() -> {
-            StatusBus.send(this, "Connecting to phone at " + host + ":" + AppActions.PORT + "...");
+            StatusBus.send(this, "Connecting to " + host + ":" + AppActions.PORT + "...");
             try {
-                socket = new Socket(host, AppActions.PORT);
+                socket = new Socket();
+                socket.connect(new java.net.InetSocketAddress(host, AppActions.PORT), 10000);
+                StatusBus.send(this, "TCP connected. Opening stream...");
                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 StatusBus.send(this, "Connected. Waiting for GPS fixes.");
+                int fixCount = 0;
                 String line;
                 while (running && (line = reader.readLine()) != null) {
-                    GpsPacket packet = GpsPacket.parse(line);
+                    fixCount++;
+                    GpsPacket packet;
+                    try {
+                        packet = GpsPacket.parse(line);
+                    } catch (Exception parseEx) {
+                        StatusBus.send(this, "Parse error on fix #" + fixCount + ": " + parseEx.getClass().getSimpleName() + ": " + parseEx.getMessage());
+                        continue;
+                    }
                     if (injectMock) {
                         inject(packet);
                     }
                     StatusBus.send(
                             this,
-                            "Received fix: " + fmt(packet.latitude) + ", " + fmt(packet.longitude)
-                                    + " accuracy " + Math.round(packet.accuracyM) + "m"
-                                    + (injectMock ? ". Sent to Google Maps." : ".")
+                            "Fix #" + fixCount + ": " + fmt(packet.latitude) + ", " + fmt(packet.longitude)
+                                    + " acc " + Math.round(packet.accuracyM) + "m"
+                                    + (injectMock ? " → Maps." : ".")
                     );
                 }
                 if (running) {
-                    StatusBus.send(this, "Phone connection closed.");
+                    StatusBus.send(this, "Phone closed the connection after " + fixCount + " fixes.");
+                }
+            } catch (java.net.ConnectException ex) {
+                if (running) {
+                    StatusBus.send(this, "Could not connect: " + ex.getMessage() + " — is the phone app sharing?");
+                }
+            } catch (java.net.SocketTimeoutException ex) {
+                if (running) {
+                    StatusBus.send(this, "Connection timed out. Check phone IP and that both devices are on the same Wi-Fi.");
                 }
             } catch (Exception ex) {
                 if (running) {
-                    StatusBus.send(this, "Receive failed: " + ex.getMessage());
+                    StatusBus.send(this, "Receive failed (" + ex.getClass().getSimpleName() + "): " + ex.getMessage());
                 }
             } finally {
+                try { if (socket != null) socket.close(); } catch (Exception ignored) {}
                 stopSelf();
             }
         });

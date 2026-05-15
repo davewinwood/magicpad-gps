@@ -105,7 +105,7 @@ public class ShareService extends Service implements LocationListener {
                 }
             } catch (Exception ex) {
                 if (running) {
-                    StatusBus.send(this, "Sharing failed: " + ex.getMessage());
+                    StatusBus.send(this, "Sharing failed (" + ex.getClass().getSimpleName() + "): " + ex.getMessage());
                 }
             }
         });
@@ -161,6 +161,7 @@ public class ShareService extends Service implements LocationListener {
                     delivered++;
                 } catch (Exception ex) {
                     clients.remove(client);
+                    StatusBus.send(this, "Client disconnected (" + ex.getClass().getSimpleName() + "): " + ex.getMessage());
                     try {
                         client.close();
                     } catch (Exception ignored) {
