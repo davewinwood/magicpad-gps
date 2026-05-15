@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- GPS map pin: white teardrop pointing down -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,19 C40,19 28,31 28,45 C28,56 34,65 43,70 L54,88 L65,70 C74,65 80,56 80,45 C80,31 68,19 54,19 Z" />
+
+    <!-- Inner dot: matches background so it reads as a hole in the pin -->
+    <path
+        android:fillColor="#12312A"
+        android:pathData="M44,44 A10,10 0 1,0 64,44 A10,10 0 1,0 44,44" />
+
+    <!-- Version badge: accent-green circle with white border -->
+    <path
+        android:fillColor="#0B8063"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2.5"
+        android:pathData="M63,27 A13,13 0 1,0 89,27 A13,13 0 1,0 63,27" />
+
+    <!-- "1" digit: top-left serif flag -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M71,22 L74,18 L80,18 L80,22 Z" />
+
+    <!-- "1" digit: vertical stem -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M74,18 L80,18 L80,36 L74,36 Z" />
+
+    <!-- "1" digit: bottom foot -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M71,36 L83,36 L83,39 L71,39 Z" />
+
+</vector>
